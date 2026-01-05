@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center min-vh-75">
+    <div class="col-12 col-md-6 col-lg-5 col-xl-4">
+        <div class="glass-card card-hover-effect">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-5">
+                    <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-4 mb-4 shadow-glow"
+                        style="background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));">
+                        <span class="material-symbols-outlined text-white"
+                            style="font-size: 40px;">account_balance_wallet</span>
+                    </div>
+                    <h2 class="h1 fw-bold mb-2 text-gradient">Welcome Back</h2>
+                    <p class="text-secondary">Sign in to manage your expenses</p>
+                </div>
+
+                {% if form.errors %}
+                <div class="alert alert-danger d-flex align-items-center gap-2 mb-4" role="alert">
+                    <span class="material-symbols-outlined">error</span>
+                    <div>Invalid username or password</div>
+                </div>
+                {% endif %}
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="id_username" class="form-label text-sm fw-semibold text-secondary">
+                            Username
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-secondary border-subtle">
+                                <span class="material-symbols-outlined fs-5">person</span>
+                            </span>
+                            <input type="text" name="username" class="form-control border-start-0 ps-0" id="id_username"
+                                required autofocus placeholder="Enter your username">
+                        </div>
+                    </div>
+                    <div class="mb-5">
+                        <label for="id_password" class="form-label text-sm fw-semibold text-secondary">
+                            Password
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-secondary border-subtle">
+                                <span class="material-symbols-outlined fs-5">lock</span>
+                            </span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0"
+                                id="id_password" required placeholder="••••••••">
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="btn btn-primary w-100 py-3 shadow-lg d-flex align-items-center justify-content-center gap-2">
+                        <span class="material-symbols-outlined">login</span>
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="mt-5 text-center">
+                    <div class="p-3 rounded-3 bg-surface-light border border-subtle">
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-muted text-sm mb-1">
+                            <span class="material-symbols-outlined fs-6">terminal</span>
+                            <span>Developer Tip</span>
+                        </div>
+                        <code
+                            class="text-primary bg-surface px-2 py-1 rounded d-block mt-2">python manage.py createsuperuser</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

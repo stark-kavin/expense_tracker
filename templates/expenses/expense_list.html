@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}Expenses - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-12 col-md-8 mb-3 mb-md-0">
+        <h1 class="display-5 fw-bold text-gradient mb-2">
+            <span class="material-symbols-outlined fs-1 text-primary align-middle me-2">receipt_long</span>
+            All Expenses
+        </h1>
+        <p class="lead text-secondary mb-0">Track and manage your spending history</p>
+    </div>
+    <div class="col-12 col-md-4 text-md-end">
+        <a href="{% url 'expense_create' %}" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">add</span>
+            <span>Add Expense</span>
+        </a>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="glass-card p-4 mb-5">
+    <form method="get" class="row g-3">
+        <div class="col-12 col-sm-6 col-md-3">
+            <label class="form-label text-secondary text-uppercase fw-bold"
+                style="font-size: 0.75rem; letter-spacing: 0.05em;">Category</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-subtle text-muted">
+                    <span class="material-symbols-outlined fs-5">category</span>
+                </span>
+                <select name="category" class="form-select bg-transparent text-white border-start-0 ps-0">
+                    <option value="" class="text-dark">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" class="text-dark" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-md-3">
+            <label class="form-label text-secondary text-uppercase fw-bold"
+                style="font-size: 0.75rem; letter-spacing: 0.05em;">Group</label>
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-subtle text-muted">
+                    <span class="material-symbols-outlined fs-5">groups</span>
+                </span>
+                <select name="group" class="form-select bg-transparent text-white border-start-0 ps-0">
+                    <option value="" class="text-dark">All Groups</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}" class="text-dark" {% if selected_group == group.id|stringformat:"s" %}selected{% endif %}>
+                        {{ group.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label text-secondary text-uppercase fw-bold"
+                style="font-size: 0.75rem; letter-spacing: 0.05em;">Start Date</label>
+            <input type="date" name="start_date" class="form-control text-white" value="{{ request.GET.start_date }}">
+        </div>
+        <div class="col-6 col-md-2">
+            <label class="form-label text-secondary text-uppercase fw-bold"
+                style="font-size: 0.75rem; letter-spacing: 0.05em;">End Date</label>
+            <input type="date" name="end_date" class="form-control text-white" value="{{ request.GET.end_date }}">
+        </div>
+        <div class="col-12 col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100 d-flex align-items-center justify-content-center gap-2">
+                <span class="material-symbols-outlined">filter_list</span> Apply
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Expense List -->
+{% if expenses %}
+<div class="row g-3">
+    {% for expense in expenses %}
+    <div class="col-12">
+        <div class="expense-card glass-card p-4 d-flex flex-column flex-md-row align-items-start align-items-md-center gap-3 position-relative">
+            <!-- Date Section -->
+            <div class="date-block text-center flex-shrink-0">
+                <div class="date-day fw-bold text-gradient" style="font-size: 2rem; line-height: 1;">
+                    {{ expense.date|date:"d" }}
+                </div>
+                <div class="date-month text-uppercase text-muted fw-semibold" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                    {{ expense.date|date:"M" }}
+                </div>
+                <div class="date-year text-muted" style="font-size: 0.7rem;">
+                    {{ expense.date|date:"Y" }}
+                </div>
+            </div>
+
+            <!-- Vertical Divider -->
+            <div class="d-none d-md-block" style="width: 1px; height: 60px; background: var(--border-subtle);"></div>
+
+            <!-- Main Content -->
+            <div class="flex-grow-1">
+                <!-- Description & Tags Row -->
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <h5 class="mb-0 fw-bold text-white">{{ expense.description }}</h5>
+                    {% if expense.is_ai_generated %}
+                    <span class="badge badge-soft badge-primary" title="AI Generated" style="font-size: 0.65rem;">
+                        <span class="material-symbols-outlined align-middle" style="font-size: 0.9rem;">smart_toy</span>
+                        AI
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- Category & Group Row -->
+                <div class="d-flex flex-wrap align-items-center gap-3">
+                    {% if expense.category %}
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="icon-wrapper" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(129, 140, 248, 0.15); display: flex; align-items: center; justify-content: center;">
+                            <span class="material-symbols-outlined" style="font-size: 1.2rem; color: var(--brand-primary);">
+                                {{ expense.category.icon_name|default:"category" }}
+                            </span>
+                        </div>
+                        <span class="text-secondary">{{ expense.category.name }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if expense.group %}
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="material-symbols-outlined text-warning" style="font-size: 1rem;">groups</span>
+                        <span class="badge badge-soft badge-warning">{{ expense.group.name }}</span>
+                    </div>
+                    {% endif %}
+
+                    {% if expense.receipt_image %}
+                    <a href="{{ expense.receipt_image.url }}" target="_blank" 
+                       class="d-flex align-items-center gap-1 text-decoration-none text-secondary hover-primary"
+                       title="View Receipt">
+                        <span class="material-symbols-outlined" style="font-size: 1rem;">receipt_long</span>
+                        <span style="font-size: 0.85rem;">Receipt</span>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Amount & Actions -->
+            <div class="d-flex flex-row flex-md-column align-items-end align-items-md-end justify-content-between justify-content-md-start gap-3 flex-shrink-0 ms-auto">
+                <div class="amount-display text-end">
+                    <div class="fw-bold text-gradient" style="font-size: 1.75rem; line-height: 1;">
+                        ₹{{ expense.amount }}
+                    </div>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'expense_update' expense.pk %}" 
+                       class="action-btn" title="Edit">
+                        <span class="material-symbols-outlined">edit</span>
+                    </a>
+                    <a href="{% url 'expense_delete' expense.pk %}" 
+                       class="action-btn action-btn-danger" title="Delete">
+                        <span class="material-symbols-outlined">delete</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="glass-card p-5 text-center">
+    <div class="mb-4 text-secondary opacity-25">
+        <span class="material-symbols-outlined" style="font-size: 80px;">inbox</span>
+    </div>
+    <h4 class="text-white mb-2">No expenses found</h4>
+    <p class="text-muted mb-4">Try adjusting your filters or add a new expense to get started.</p>
+    <a href="{% url 'expense_create' %}" class="btn btn-primary btn-lg">
+        <span class="material-symbols-outlined align-middle me-2">add</span>
+        Add Your First Expense
+    </a>
+</div>
+{% endif %}
+{% endblock %}

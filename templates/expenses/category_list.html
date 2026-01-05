@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-12 col-md-8 mb-3 mb-md-0">
+        <h1 class="display-5 fw-bold text-gradient mb-2">
+            <span class="material-symbols-outlined fs-1 text-primary align-middle me-2">category</span>
+            Categories
+        </h1>
+        <p class="lead text-secondary mb-0">Organize your expenses</p>
+    </div>
+    <div class="col-12 col-md-4 text-md-end">
+        <a href="{% url 'category_create' %}" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">add</span>
+            <span>New Category</span>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if categories %}
+    {% for category in categories %}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="glass-card card-hover-effect h-100 p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center"
+                    style="background: rgba(129, 140, 248, 0.1); width: 64px; height: 64px;">
+                    <span class="material-symbols-outlined text-primary fs-2">
+                        {{ category.icon_name }}
+                    </span>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-sm btn-outline-light text-secondary border-0" type="button"
+                        data-bs-toggle="dropdown">
+                        <span class="material-symbols-outlined">more_vert</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end bg-surface border-subtle shadow-lg">
+                        <li><a class="dropdown-item text-light hover-primary"
+                                href="{% url 'category_update' category.pk %}"><span
+                                    class="material-symbols-outlined fs-6 align-middle me-2">edit</span>Edit</a></li>
+                        <li><a class="dropdown-item text-danger hover-danger"
+                                href="{% url 'category_delete' category.pk %}"><span
+                                    class="material-symbols-outlined fs-6 align-middle me-2">delete</span>Delete</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <h4 class="text-white fw-bold mb-1">{{ category.name }}</h4>
+            <div class="text-secondary small mb-3">
+                {{ category.expense_count }} transaction{{ category.expense_count|pluralize }}
+            </div>
+
+            {% if category.total_amount %}
+            <div class="mt-auto pt-3 border-top border-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-xs text-muted text-uppercase fw-bold">Total Spent</span>
+                    <span class="fw-bold text-gradient fs-5">₹{{ category.total_amount|floatformat:2 }}</span>
+                </div>
+            </div>
+            {% else %}
+            <div class="mt-auto pt-3 border-top border-subtle">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-xs text-muted text-uppercase fw-bold">Total Spent</span>
+                    <span class="fw-bold text-muted fs-5">₹0.00</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="glass-card text-center py-5">
+            <div class="mb-3 text-secondary opacity-25">
+                <span class="material-symbols-outlined" style="font-size: 64px;">category</span>
+            </div>
+            <h5 class="text-white mb-2">No categories found</h5>
+            <p class="text-muted mb-4">Create categories to organize your spending.</p>
+            <a href="{% url 'category_create' %}" class="btn btn-primary">Create First Category</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

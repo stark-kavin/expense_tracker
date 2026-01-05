@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Groups - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-12 col-md-8 mb-3 mb-md-0">
+        <h1 class="display-5 fw-bold text-gradient mb-2">
+            <span class="material-symbols-outlined fs-1 text-primary align-middle me-2">groups</span>
+            Expense Groups
+        </h1>
+        <p class="lead text-secondary mb-0">Share and split expenses with friends</p>
+    </div>
+    <div class="col-12 col-md-4 text-md-end">
+        <a href="{% url 'group_create' %}" class="btn btn-primary btn-lg d-inline-flex align-items-center gap-2">
+            <span class="material-symbols-outlined">add</span>
+            <span>New Group</span>
+        </a>
+    </div>
+</div>
+
+<div class="row g-4">
+    {% if groups %}
+    {% for group in groups %}
+    <div class="col-12 col-md-6 col-lg-4">
+        <div class="glass-card card-hover-effect h-100 p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center"
+                    style="background: rgba(139, 92, 246, 0.1); width: 56px; height: 56px;">
+                    <span class="material-symbols-outlined text-white fs-3"
+                        style="color: var(--brand-secondary) !important;">
+                        group_work
+                    </span>
+                </div>
+                <span class="badge badge-soft badge-primary">{{ group.expense_count }} expenses</span>
+            </div>
+
+            <h4 class="text-white fw-bold mb-1">
+                <a href="{% url 'group_detail' group.pk %}"
+                    class="text-white text-decoration-none hover-primary transition-colors">
+                    {{ group.name }}
+                </a>
+            </h4>
+
+            <div class="text-secondary small mb-3">
+                <span class="d-inline-flex align-items-center gap-1">
+                    <span class="material-symbols-outlined fs-6">person</span>
+                    {{ group.members.count }} member{{ group.members.count|pluralize }}
+                </span>
+            </div>
+
+            {% if group.description %}
+            <p class="text-muted text-sm mb-4 line-clamp-2">{{ group.description }}</p>
+            {% else %}
+            <p class="text-muted text-sm mb-4 opacity-0">No description</p>
+            {% endif %}
+
+            <div class="mt-auto">
+                <!-- Members Avatar Stack (Visual only for now) -->
+                <div class="d-flex align-items-center mb-4">
+                    {% for member in group.members.all|slice:":4" %}
+                    <div class="rounded-circle bg-surface border border-subtle d-flex align-items-center justify-content-center text-xs text-white fw-bold"
+                        style="width: 32px; height: 32px; margin-right: -10px; z-index: {{ forloop.revcounter }};"
+                        title="{{ member.username }}">
+                        {{ member.username|first|upper }}
+                    </div>
+                    {% endfor %}
+                    {% if group.members.count > 4 %}
+                    <div class="rounded-circle bg-surface-light border border-subtle d-flex align-items-center justify-content-center text-xs text-muted fw-bold"
+                        style="width: 32px; height: 32px; margin-left: 0; z-index: 0;">
+                        +{{ group.members.count|add:"-4" }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="pt-3 border-top border-subtle d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="d-block text-xs text-muted text-uppercase fw-bold">Total</span>
+                        <span class="fw-bold text-gradient fs-5">₹{{ group.total|floatformat:2|default:"0.00" }}</span>
+                    </div>
+                    <div class="d-flex gap-1">
+                        {% if group.created_by == user %}
+                        <a href="{% url 'group_update' group.pk %}"
+                            class="btn btn-icon btn-sm text-secondary hover-primary" title="Edit">
+                            <span class="material-symbols-outlined fs-5">edit</span>
+                        </a>
+                        <a href="{% url 'group_delete' group.pk %}"
+                            class="btn btn-icon btn-sm text-secondary hover-danger" title="Delete">
+                            <span class="material-symbols-outlined fs-5">delete</span>
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'group_detail' group.pk %}"
+                            class="btn btn-icon btn-sm text-primary hover-primary" title="View Details">
+                            <span class="material-symbols-outlined fs-5">arrow_forward</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="col-12">
+        <div class="glass-card text-center py-5">
+            <div class="mb-3 text-secondary opacity-25">
+                <span class="material-symbols-outlined" style="font-size: 64px;">groups</span>
+            </div>
+            <h5 class="text-white mb-2">No groups yet</h5>
+            <p class="text-muted mb-4">Create a group to split expenses with friends.</p>
+            <a href="{% url 'group_create' %}" class="btn btn-primary">Create First Group</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

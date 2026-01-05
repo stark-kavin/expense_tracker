@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row mb-5 align-items-center">
+    <div class="col-12 col-lg-8 mb-3 mb-lg-0">
+        <h1 class="display-5 fw-bold text-gradient mb-2">
+            <span class="material-symbols-outlined fs-1 text-primary align-middle me-2">dashboard</span>
+            Dashboard
+        </h1>
+        <p class="lead text-secondary mb-0">Welcome back, <strong class="text-white">{{ user.username }}</strong>! 👋
+        </p>
+    </div>
+    <div class="col-12 col-lg-4 text-lg-end">
+        <div class="d-flex gap-2 justify-content-lg-end">
+            <a href="{% url 'chat_expense' %}"
+                class="btn btn-primary btn-lg flex-grow-1 flex-md-grow-0 d-inline-flex align-items-center justify-content-center gap-2">
+                <span class="material-symbols-outlined">auto_awesome</span>
+                <span>AI Add</span>
+            </a>
+            <a href="{% url 'expense_create' %}"
+                class="btn btn-outline btn-lg flex-grow-1 flex-md-grow-0 d-inline-flex align-items-center justify-content-center gap-2">
+                <span class="material-symbols-outlined">receipt</span>
+                <span>Manual</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row g-4 mb-5">
+    <div class="col-6 col-md-3">
+        <div class="glass-card h-100 p-3 p-md-4 position-relative overflow-hidden card-hover-effect">
+            <div class="d-flex align-items-center gap-2 text-secondary mb-2 mb-md-3 text-uppercase fw-bold"
+                style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">payments</span>
+                <span class="d-none d-sm-inline">Total Expenses</span>
+                <span class="d-sm-none">Total</span>
+            </div>
+            <div class="fs-3 fs-md-2 fw-bold text-white mb-1 mb-md-2">₹{{ total_expenses|floatformat:2 }}</div>
+            <div class="text-sm text-muted">
+                <span class="badge badge-soft badge-primary me-1">{{ expense_count }}</span>
+                <span class="d-none d-sm-inline">transactions</span>
+            </div>
+            <div class="position-absolute top-0 end-0 opacity-10 p-2 p-md-3">
+                <span class="material-symbols-outlined stat-card-icon">payments</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="glass-card h-100 p-3 p-md-4 position-relative overflow-hidden card-hover-effect">
+            <div class="d-flex align-items-center gap-2 text-secondary mb-2 mb-md-3 text-uppercase fw-bold"
+                style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">calendar_month</span>
+                <span class="d-none d-sm-inline">This Month</span>
+                <span class="d-sm-none">Month</span>
+            </div>
+            <div class="fs-3 fs-md-2 fw-bold text-success mb-1 mb-md-2">₹{{ monthly_expenses|floatformat:2 }}</div>
+            <div class="text-sm text-muted">
+                <span class="d-none d-sm-inline">Last 30 days</span>
+                <span class="d-sm-none">30 days</span>
+            </div>
+            <div class="position-absolute top-0 end-0 opacity-10 p-2 p-md-3">
+                <span class="material-symbols-outlined text-success stat-card-icon">trending_up</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="glass-card h-100 p-3 p-md-4 position-relative overflow-hidden card-hover-effect">
+            <div class="d-flex align-items-center gap-2 text-secondary mb-2 mb-md-3 text-uppercase fw-bold"
+                style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">category</span>
+                Categories
+            </div>
+            <div class="fs-3 fs-md-2 fw-bold text-warning mb-1 mb-md-2">{{ category_breakdown|length }}</div>
+            <div class="text-sm text-muted">
+                <span class="d-none d-sm-inline">Active categories</span>
+                <span class="d-sm-none">Active</span>
+            </div>
+            <div class="position-absolute top-0 end-0 opacity-10 p-2 p-md-3">
+                <span class="material-symbols-outlined text-warning stat-card-icon">category</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="glass-card h-100 p-3 p-md-4 position-relative overflow-hidden card-hover-effect">
+            <div class="d-flex align-items-center gap-2 text-secondary mb-2 mb-md-3 text-uppercase fw-bold"
+                style="font-size: 0.65rem; letter-spacing: 0.05em;">
+                <span class="material-symbols-outlined" style="font-size: 1rem;">groups</span>
+                Groups
+            </div>
+            <div class="fs-3 fs-md-2 fw-bold mb-1 mb-md-2" style="color: var(--brand-secondary) !important;">{{ group_expenses|length }}</div>
+            <div class="text-sm text-muted">
+                <span class="d-none d-sm-inline">Active groups</span>
+                <span class="d-sm-none">Active</span>
+            </div>
+            <div class="position-absolute top-0 end-0 opacity-10 p-2 p-md-3">
+                <span class="material-symbols-outlined stat-card-icon"
+                    style="color: var(--brand-secondary);">groups</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Recent Expenses -->
+    <div class="col-12 col-lg-7">
+        <div class="glass-card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center border-subtle">
+                <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined text-primary">history</span>
+                    Recent Expenses
+                </h5>
+                <a href="{% url 'expense_list' %}" class="btn btn-sm btn-outline d-flex align-items-center gap-1">
+                    <span>View All</span>
+                    <span class="material-symbols-outlined fs-6">arrow_forward</span>
+                </a>
+            </div>
+            <div class="card-body p-0">
+                {% if recent_expenses %}
+                <div class="list-group list-group-flush bg-transparent">
+                    {% for expense in recent_expenses %}
+                    <div class="list-group-item bg-transparent border-subtle px-4 py-3 expense-item">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle p-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                                style="background: rgba(129, 140, 248, 0.15); color: var(--brand-primary); width: 48px; height: 48px;">
+                                <span class="material-symbols-outlined">
+                                    {{ expense.category.icon_name|default:"receipt" }}
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1 fw-semibold text-white">{{ expense.description }}</h6>
+                                <div class="d-flex align-items-center gap-2 text-sm text-muted">
+                                    <span class="d-flex align-items-center gap-1">
+                                        <span class="material-symbols-outlined fs-6">calendar_today</span>
+                                        {{ expense.date|date:"M d" }}
+                                    </span>
+                                    {% if expense.category %}
+                                    <span class="text-secondary">• {{ expense.category.name }}</span>
+                                    {% endif %}
+
+                                    {% if expense.is_ai_generated %}
+                                    <span
+                                        class="badge badge-soft badge-primary d-flex align-items-center gap-1 py-0 px-2"
+                                        style="font-size: 0.65rem;">
+                                        <span class="material-symbols-outlined"
+                                            style="font-size: 10px;">auto_awesome</span> AI
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-bold text-gradient fs-5">₹{{ expense.amount }}</div>
+                                {% if expense.group %}
+                                <div class="badge badge-soft badge-warning mt-1">{{ expense.group.name }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-3 text-secondary opacity-25">
+                        <span class="material-symbols-outlined" style="font-size: 64px;">inbox</span>
+                    </div>
+                    <h5 class="text-white mb-2">No expenses yet</h5>
+                    <p class="text-muted mb-4">Start tracking your spending today.</p>
+                    <a href="{% url 'chat_expense' %}" class="btn btn-primary">
+                        <span class="material-symbols-outlined align-middle me-2">add_circle</span>
+                        Add First Expense
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="col-12 col-lg-5">
+        <div class="glass-card mb-4 h-100">
+            <div class="card-header border-subtle">
+                <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                    <span class="material-symbols-outlined text-warning">pie_chart</span>
+                    Top Categories
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                {% if category_breakdown %}
+                {% for cat in category_breakdown %}
+                <div class="mb-4 last:mb-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="material-symbols-outlined text-primary fs-5">
+                                {{ cat.category__icon_name|default:"category" }}
+                            </span>
+                            <span class="fw-medium text-white">{{ cat.category__name|default:"Uncategorized" }}</span>
+                        </div>
+                        <span class="fw-bold text-white">₹{{ cat.total|floatformat:0 }}</span>
+                    </div>
+                    <div class="progress bg-surface-light" style="height: 8px;">
+                        <div class="progress-bar bg-gradient-brand" role="progressbar"
+                            style="width: {% widthratio cat.total total_expenses 100 %}%; background: linear-gradient(90deg, var(--brand-primary), var(--brand-secondary));">
+                        </div>
+                    </div>
+                    <div class="mt-1 d-flex justify-content-between text-xs text-muted">
+                        <span>{{ cat.count }} transactions</span>
+                        <span>{% widthratio cat.total total_expenses 100 %}%</span>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="text-center py-5 text-secondary">
+                    <p>No category data available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

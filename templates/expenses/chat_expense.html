@@ -1,0 +1,552 @@
+{% extends 'base.html' %}
+
+{% block title %}AI Chat - Expense Tracker{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Chat Variables */
+    :root {
+        --chat-sidebar-width: 280px;
+        --chat-input-height: 80px;
+        --chat-header-height: 70px;
+    }
+
+    /* Override main layout */
+    .chat-page {
+        height: calc(100vh - 76px);
+        display: flex;
+        overflow: hidden;
+        border-top: 1px solid var(--border-subtle);
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.85) 100%);
+    }
+
+    /* Global scrollbar for chat */
+    .chat-messages-area::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .chat-messages-area::-webkit-scrollbar-track {
+        background: rgba(15, 23, 42, 0.3);
+        border-radius: 4px;
+    }
+
+    .chat-messages-area::-webkit-scrollbar-thumb {
+        background: rgba(129, 140, 248, 0.3);
+        border-radius: 4px;
+    }
+
+    .chat-messages-area::-webkit-scrollbar-thumb:hover {
+        background: rgba(129, 140, 248, 0.5);
+    }
+
+    /* Layout Components */
+    .chat-sidebar {
+        width: var(--chat-sidebar-width);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(20px);
+        border-right: 1px solid rgba(129, 140, 248, 0.1);
+        display: flex;
+        flex-direction: column;
+        z-index: 50;
+        box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .chat-main {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .chat-messages-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        background: transparent;
+    }
+
+    .chat-input-container {
+        padding: 1.5rem;
+        background: rgba(15, 23, 42, 0.98);
+        border-top: 1px solid rgba(129, 140, 248, 0.15);
+        width: 100%;
+        backdrop-filter: blur(12px);
+    }
+
+    /* Message Styles */
+    .msg-group {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+        width: 100%;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .msg-group.user {
+        flex-direction: row-reverse;
+    }
+
+    .msg-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 18px;
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.2), rgba(167, 139, 250, 0.2));
+        border: 1px solid rgba(129, 140, 248, 0.3);
+        box-shadow: 0 4px 12px rgba(129, 140, 248, 0.2);
+    }
+
+    .msg-content {
+        max-width: 70%;
+        min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+        .msg-content {
+            max-width: 85%;
+        }
+    }
+
+    .msg-bubble {
+        padding: 0.9rem 1.15rem;
+        border-radius: 16px;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.65;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        word-wrap: break-word;
+    }
+
+    .msg-group.user .msg-bubble {
+        background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+        color: #0f172a;
+        border-bottom-right-radius: 4px;
+        font-weight: 500;
+        box-shadow: 0 4px 16px rgba(129, 140, 248, 0.4);
+    }
+
+    .msg-group.ai .msg-bubble {
+        background: rgba(30, 41, 59, 0.95);
+        border: 1px solid rgba(129, 140, 248, 0.2);
+        color: var(--text-primary);
+        border-bottom-left-radius: 4px;
+        backdrop-filter: blur(8px);
+    }
+
+    /* Expense Cards inside Chat */
+    .expense-card {
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%);
+        border: 1px solid rgba(52, 211, 153, 0.3);
+        border-left: 3px solid var(--success);
+        border-radius: 14px;
+        padding: 1.15rem;
+        margin-top: 0.75rem;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(8px);
+    }
+
+    .expense-card:hover {
+        transform: translateX(4px);
+        background: linear-gradient(135deg, rgba(30, 41, 59, 1) 0%, rgba(51, 65, 85, 1) 100%);
+        border-color: rgba(52, 211, 153, 0.5);
+        box-shadow: 0 8px 24px rgba(52, 211, 153, 0.15);
+    }
+
+    /* Tips Cards */
+    .tip-card {
+        background: rgba(30, 41, 59, 0.6);
+        border: 1px solid rgba(129, 140, 248, 0.15);
+        border-radius: 12px;
+        padding: 1rem;
+        transition: all 0.3s ease;
+        cursor: default;
+    }
+
+    .tip-card:hover {
+        background: rgba(30, 41, 59, 0.9);
+        border-color: rgba(129, 140, 248, 0.3);
+        transform: translateX(4px);
+    }
+
+    .tip-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    /* New Chat Button */
+    .new-chat-btn {
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(167, 139, 250, 0.15));
+        border: 2px solid rgba(129, 140, 248, 0.3);
+        color: var(--text-primary);
+        font-weight: 600;
+        border-radius: 14px;
+        padding: 0.9rem 1.25rem;
+        transition: all 0.3s ease;
+    }
+
+    .new-chat-btn:hover {
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.25), rgba(167, 139, 250, 0.25));
+        border-color: rgba(129, 140, 248, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(129, 140, 248, 0.3);
+        color: white;
+    }
+
+    /* Input Styling */
+    .chat-input-field {
+        background: rgba(30, 41, 59, 0.8);
+        border: 2px solid rgba(129, 140, 248, 0.2);
+        color: var(--text-primary);
+        border-radius: 24px;
+        padding: 0.85rem 1.25rem;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .chat-input-field:focus {
+        background: rgba(30, 41, 59, 1);
+        border-color: rgba(129, 140, 248, 0.5);
+        box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.1), 0 4px 20px rgba(129, 140, 248, 0.2);
+        outline: none;
+        color: white;
+    }
+
+    .chat-input-field::placeholder {
+        color: var(--text-muted);
+    }
+
+    .send-btn {
+        width: 52px;
+        height: 52px;
+        background: linear-gradient(135deg, #818cf8, #a78bfa);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 16px rgba(129, 140, 248, 0.4);
+        flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+        transform: scale(1.08) rotate(5deg);
+        box-shadow: 0 6px 24px rgba(129, 140, 248, 0.6);
+    }
+
+    .send-btn:active {
+        transform: scale(0.95);
+    }
+
+    /* Empty State */
+    .empty-state-icon {
+        width: 80px;
+        height: 80px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, rgba(129, 140, 248, 0.15), rgba(167, 139, 250, 0.15));
+        border: 2px solid rgba(129, 140, 248, 0.3);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 24px rgba(129, 140, 248, 0.2);
+    }
+
+    .start-chat-bubble {
+        background: rgba(30, 41, 59, 0.8);
+        border: 1px solid rgba(129, 140, 248, 0.2);
+        transition: all 0.3s ease;
+    }
+
+    .start-chat-bubble:hover {
+        background: rgba(30, 41, 59, 1);
+        border-color: rgba(129, 140, 248, 0.4);
+        color: white !important;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(129, 140, 248, 0.2);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    /* Sidebar Mobile Toggle */
+    @media (max-width: 991px) {
+        .chat-sidebar {
+            position: fixed;
+            top: 76px;
+            left: 0;
+            bottom: 0;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 280px;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .chat-sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-backdrop {
+            position: fixed;
+            top: 76px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .sidebar-backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block main_wrapper %}
+<main class="chat-page position-relative">
+    <!-- Mobile Backdrop -->
+    <div class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside class="chat-sidebar" id="chatSidebar">
+        <!-- New Chat Button -->
+        <div class="p-4 flex-shrink-0">
+            <form method="post" action="{% url 'clear_chat' %}">
+                {% csrf_token %}
+                <button type="submit"
+                    class="new-chat-btn w-100 d-flex align-items-center justify-content-center gap-2">
+                    <span class="material-symbols-outlined">add_circle</span>
+                    <span>New Chat</span>
+                </button>
+            </form>
+        </div>
+
+        <div class="px-3 py-2 flex-grow-1 overflow-auto">
+            <h6 class="text-xs fw-bold text-uppercase mb-3 px-2" style="color: var(--text-muted); letter-spacing: 0.05em;">Quick Actions</h6>
+            <div class="d-flex flex-column gap-2">
+                <div class="tip-card">
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <div class="tip-icon" style="background: rgba(129, 140, 248, 0.15);">
+                            <span class="material-symbols-outlined text-primary" style="font-size: 18px;">receipt_long</span>
+                        </div>
+                        <span class="fw-semibold text-white" style="font-size: 0.9rem;">Log Expense</span>
+                    </div>
+                    <p class="text-xs text-secondary mb-0 ms-1">"Bought coffee for ₹5"</p>
+                </div>
+
+                <div class="tip-card">
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <div class="tip-icon" style="background: rgba(251, 191, 36, 0.15);">
+                            <span class="material-symbols-outlined text-warning" style="font-size: 18px;">group</span>
+                        </div>
+                        <span class="fw-semibold text-white" style="font-size: 0.9rem;">Split Bill</span>
+                    </div>
+                    <p class="text-xs text-secondary mb-0 ms-1">"Dinner ₹60 for Trip Group"</p>
+                </div>
+
+                <div class="tip-card">
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <div class="tip-icon" style="background: rgba(52, 211, 153, 0.15);">
+                            <span class="material-symbols-outlined text-success" style="font-size: 18px;">category</span>
+                        </div>
+                        <span class="fw-semibold text-white" style="font-size: 0.9rem;">Categorize</span>
+                    </div>
+                    <p class="text-xs text-secondary mb-0 ms-1">"Uber ₹20 for Transport"</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-top text-center" style="border-color: rgba(129, 140, 248, 0.1) !important;">
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-2">
+                <span class="material-symbols-outlined text-gradient" style="font-size: 20px;">auto_awesome</span>
+                <span class="fw-semibold text-gradient" style="font-size: 0.85rem;">Powered by Gemini AI</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Chat Implementation -->
+    <section class="chat-main">
+        <!-- Mobile Header Bar -->
+        <div class="d-lg-none d-flex align-items-center p-3 border-bottom border-subtle bg-surface">
+            <button class="btn btn-icon text-secondary" onclick="toggleSidebar()">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <span class="fw-bold text-white mx-auto">AI Assistant</span>
+            <div style="width: 40px;"></div>
+        </div>
+
+        <!-- Messages Area -->
+        <div class="chat-messages-area" id="chatMessages">
+            {% if chat_history %}
+            {% for msg in chat_history %}
+            {% if msg.type == 'user' %}
+            <div class="msg-group user">
+                <div class="msg-content">
+                    <div class="msg-bubble">
+                        {{ msg.message|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="msg-group ai">
+                <div class="msg-avatar bg-surface border border-subtle text-primary">
+                    <span class="material-symbols-outlined">smart_toy</span>
+                </div>
+                <div class="msg-content">
+                    <div class="msg-bubble">
+                        {{ msg.message|linebreaks }}
+
+                        {% if msg.expenses %}
+                        {% for expense in msg.expenses %}
+                        <div class="expense-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-bold text-white">{{ expense.description }}</div>
+                                    <div class="d-flex gap-2 mt-1 text-xs text-secondary">
+                                        {% if expense.category %}
+                                        <span class="d-flex align-items-center gap-1">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size: 14px;">category</span>
+                                            {{ expense.category }}
+                                        </span>
+                                        {% endif %}
+                                        {% if expense.group %}
+                                        <span class="d-flex align-items-center gap-1">
+                                            <span class="material-symbols-outlined"
+                                                style="font-size: 14px;">groups</span>
+                                            {{ expense.group }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="fw-bold text-success fs-5">
+                                    ₹{{ expense.amount }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <div class="m-auto text-center" style="max-width: 550px;">
+                <div class="empty-state-icon">
+                    <span class="material-symbols-outlined text-gradient" style="font-size: 48px;">chat_bubble</span>
+                </div>
+                <h2 class="fw-bold text-white mb-3" style="font-size: 1.75rem;">What did you spend on?</h2>
+                <p class="text-secondary mb-4" style="font-size: 1rem; line-height: 1.6;">I can help you log expenses, categorize them, and split bills with your groups.</p>
+
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <button onclick="fillInput('Spent ₹45 on groceries')"
+                        class="start-chat-bubble btn rounded-pill px-4 py-2">
+                        <span style="font-size: 0.9rem;">💰 Spent ₹45 on groceries</span>
+                    </button>
+                    <button onclick="fillInput('Dinner ₹120 for Trip Group')"
+                        class="start-chat-bubble btn rounded-pill px-4 py-2">
+                        <span style="font-size: 0.9rem;">🍽️ Dinner ₹120 for Trip Group</span>
+                    </button>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="typing-indicator my-3 ms-5 ps-4" style="display: none;">
+                <div
+                    class="d-flex align-items-center gap-1 p-3 rounded-3 bg-surface border border-subtle w-auto d-inline-flex">
+                    <span class="spinner-grow spinner-grow-sm text-primary"
+                        style="width: 0.4rem; height: 0.4rem; animation-duration: 0.6s;"></span>
+                    <span class="spinner-grow spinner-grow-sm text-secondary"
+                        style="width: 0.4rem; height: 0.4rem; animation-duration: 0.6s; animation-delay: 0.1s;"></span>
+                    <span class="spinner-grow spinner-grow-sm text-success"
+                        style="width: 0.4rem; height: 0.4rem; animation-duration: 0.6s; animation-delay: 0.2s;"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Area -->
+        <div class="chat-input-container">
+            <form method="post" hx-post="{% url 'chat_expense' %}" hx-target="#chatMessages" hx-swap="innerHTML"
+                hx-indicator=".typing-indicator" class="d-flex gap-3 align-items-center max-w-900 mx-auto" style="max-width: 800px;">
+                {% csrf_token %}
+                <div class="position-relative flex-grow-1">
+                    <input type="text" name="message"
+                        class="chat-input-field form-control form-control-lg w-100"
+                        placeholder="Type your message..." required autocomplete="off">
+                </div>
+                <button type="submit" class="send-btn">
+                    <span class="material-symbols-outlined text-dark fw-bold" style="font-size: 24px;">send</span>
+                </button>
+            </form>
+        </div>
+    </section>
+</main>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function scrollToBottom() {
+        const chatContainer = document.getElementById('chatMessages');
+        if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+
+    function toggleSidebar() {
+        document.getElementById('chatSidebar').classList.toggle('active');
+        document.querySelector('.sidebar-backdrop').classList.toggle('active');
+    }
+
+    function fillInput(text) {
+        document.querySelector('input[name="message"]').value = text;
+        document.querySelector('input[name="message"]').focus();
+    }
+
+    // Initial Scroll
+    scrollToBottom();
+
+    // Updates
+    document.body.addEventListener('htmx:afterSwap', function () {
+        scrollToBottom();
+        const input = document.querySelector('input[name="message"]');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    });
+</script>
+{% endblock %}

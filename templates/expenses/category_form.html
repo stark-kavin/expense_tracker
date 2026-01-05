@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }} - Expense Tracker{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h4 class="mb-0">{{ title }}</h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                        {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text|safe }}</small>
+                        {% endif %}
+                        {% if field.errors %}
+                        <div class="text-danger">
+                            {% for error in field.errors %}
+                            <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Icon Suggestions Datalist -->
+                    <datalist id="icon-suggestions">
+                        {% for icon in icon_suggestions %}
+                        <option value="{{ icon }}">
+                        {% endfor %}
+                    </datalist>
+                    
+                    <div class="alert alert-info">
+                        <strong><span class="material-symbols-outlined" style="font-size: 16px;">info</span> Icon Preview:</strong>
+                        <div class="mt-2">
+                            <span class="material-symbols-outlined" id="icon-preview" style="font-size: 48px; color: #4F46E5;">
+                                category
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-symbols-outlined">save</span> Save Category
+                        </button>
+                        <a href="{% url 'category_list' %}" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Live icon preview
+    const iconInput = document.querySelector('input[name="icon_name"]');
+    const iconPreview = document.getElementById('icon-preview');
+    
+    if (iconInput && iconPreview) {
+        // Set initial preview
+        if (iconInput.value) {
+            iconPreview.textContent = iconInput.value;
+        }
+        
+        // Update on input
+        iconInput.addEventListener('input', function() {
+            iconPreview.textContent = this.value || 'category';
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,46 @@
+{% if chat_history %}
+{% for msg in chat_history %}
+<div class="message {{ msg.type }}{% if msg.is_error %} error{% endif %}">
+    <div class="message-content">
+        <div class="message-bubble">
+            {{ msg.message|linebreaks }}
+
+            {% if msg.expenses %}
+            {% for expense in msg.expenses %}
+            <div class="expense-card">
+                <div class="expense-card-item">
+                    <div>
+                        <strong>{{ expense.description }}</strong>
+                        {% if expense.category %}
+                        <div class="mt-1">
+                            <span class="material-symbols-outlined category-icon" style="font-size: 20px;">
+                                {{ expense.category_icon }}
+                            </span>
+                            <small>{{ expense.category }}</small>
+                        </div>
+                        {% endif %}
+                        {% if expense.group %}
+                        <div class="mt-1">
+                            <span class="material-symbols-outlined" style="font-size: 16px;">groups</span>
+                            <small>{{ expense.group }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="text-end">
+                        <strong class="text-success">₹{{ expense.amount }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="empty-state">
+    <span class="material-symbols-outlined">chat_bubble_outline</span>
+    <h5>Start a conversation</h5>
+    <p>Type your expense below and I'll help you track it!</p>
+</div>
+{% endif %}
